@@ -5,7 +5,7 @@ import PageHeader from '../template/pageHeader'
 import ProjetoForm from './projetoForm'
 import ProjetoList from './projetoList'
 
-const URL = 'http://localhost:3003/api/';
+const URL = 'http://localhost:8081/api';
 
 export default class Projeto extends Component{
 
@@ -14,13 +14,19 @@ export default class Projeto extends Component{
         this.state= {description: '', list: []}
         this.handleChange = this.handleChange.bind(this)
         this.handleAdd = this.handleAdd.bind(this)
+
         this.handleRemove=this.handleRemove.bind(this)
+        this.handleMarkAsDone=this.handleMarkAsDone.bind(this)
+        this.handleMarkAsPadding = this.handleMarkAsPadding.bind(this)
+        this.handleSearch = this.handleSearch.bind(this)
+
 
         this.refresh()
     }
 
-    refresh(){
-        axios.get(`${URL}?sort=-createdAt`)
+    refresh(description =''){
+        const search = description ? `${description}`:''
+        axios.get(`${URL}/${search}`)
             .then(resp=>this.setState({...this.state, description: '', list:resp.data}))
     }
 
@@ -35,8 +41,22 @@ export default class Projeto extends Component{
     }
 
     handleRemove(projeto){
-       axios.delete(`${URL}/${projeto.__id}`)
-         .then(resp=>this.refresh())
+        axios.delete(`${URL}/${projeto.id}`)
+            .then(resp=>this.refresh())
+    }
+
+    handleMarkAsDone(projeto){
+        axios.put(`${URL}/${projeto.id}`, {...projeto, done:true})
+            .then(resp=>this.refresh()) 
+    }
+
+    handleMarkAsPadding(projeto){
+        axios.put(`${URL}/${projeto.id}`, {...projeto, done:false})
+        .then(resp=>this.refresh()) 
+    }
+
+    handleSearch(){
+        this.refresh(this.state.description)
     }
 
     render(){
@@ -44,10 +64,13 @@ export default class Projeto extends Component{
             <div>
                 <PageHeader name='Tarefas' small='Cadastro'></PageHeader>
                 <ProjetoForm description={this.state.description}
-                 handleChange={this.handleChange}
-                 handleAdd={this.handleAdd}/>
+                    handleChange={this.handleChange}
+                    handleAdd={this.handleAdd}
+                    handleSearch={this.handleSearch}/>
                 <ProjetoList  list={this.state.list}
                     handleRemove={this.handleRemove}
+                    handleMarkAsDone= {this.handleMarkAsDone}
+                    handleMarkAsPadding = {this.handleMarkAsPadding}
                 />
             </div>
         )
